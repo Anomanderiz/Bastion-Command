@@ -227,8 +227,8 @@ def send_to_discord(message):
 
     # Format the message in Mortimer's voice
     formatted_content = (
-        "My noble masters, I write to you of happenings at your bastion:\n"
-        f"```{message}```\n"
+        "My noble masters, I write to you of happenings at your bastion:\n\n"
+        f"{message}\n\n"
         "Never you fear for Mortimer is here."
     )
 
@@ -480,4 +480,3 @@ elif view == "Proprietor's View":
     proprietor_view()
 elif view == "DM View":
     dm_view()
-
