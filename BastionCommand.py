@@ -311,34 +311,30 @@ def proprietor_view(data):
             
             cols[0].markdown(f"**{facility['name']}** ({facility['type']})")
             
-            if facility['type'] == 'Special' or (facility['type'] == 'Basic' and is_busy):
-                if not is_busy:
+            if is_busy:
+                progress = facility['order_progress']
+                duration = facility['order_duration']
+                cols[0].markdown(f"Status: <span style='color: #F7DC6F;'>{facility['status']}</span>", unsafe_allow_html=True)
+                cols[0].progress(progress / duration if duration > 0 else 0, text=f"{progress}/{duration} Days")
+                if cols[1].button("Cancel Order", key=f"cancel_{facility['id']}"):
+                    supabase.table("facilities").update({"status": "Idle", "order_progress": 0, "order_duration": 0}).eq("id", facility['id']).execute()
+                    add_log_entry(data['campaign']['current_day'], f"{char_name} cancelled the order '{facility['status']}' at the {facility['name']}.")
+                    st.rerun()
+            else: # Facility is Idle
+                if facility['type'] == 'Special':
                     cols[0].markdown(f"Status: <span style='color: #82E0AA;'>Idle</span>", unsafe_allow_html=True)
-                else:
-                    progress = facility['order_progress']
-                    duration = facility['order_duration']
-                    cols[0].markdown(f"Status: <span style='color: #F7DC6F;'>{facility['status']}</span>", unsafe_allow_html=True)
-                    cols[0].progress(progress / duration if duration > 0 else 0, text=f"{progress}/{duration} Days")
-                
-                if is_busy:
-                    if cols[1].button("Cancel Order", key=f"cancel_{facility['id']}"):
-                        supabase.table("facilities").update({"status": "Idle", "order_progress": 0, "order_duration": 0}).eq("id", facility['id']).execute()
-                        add_log_entry(data['campaign']['current_day'], f"{char_name} cancelled the order '{facility['status']}' at the {facility['name']}.")
-                        st.rerun()
-                else: # Is Special and Idle
                     if cols[2].button("Issue Order", key=f"order_{facility['id']}"):
                         st.session_state.selected_facility_order = facility['id']
-            
-            else: # Is Basic and Idle
-                cols[0].markdown(f"Size: {facility.get('size', 'N/A')}")
-                current_size = facility.get('size')
-                if current_size in ["Cramped", "Roomy"]:
-                    upgrade_map = {"Cramped": "Roomy", "Roomy": "Vast"}
-                    target_size = upgrade_map[current_size]
-                    upgrade_key = f"{current_size} to {target_size}"
-                    cost_info = FACILITY_RULES[facility['name']]['enlarge_cost'][upgrade_key]
-                    if cols[1].button(f"Enlarge to {target_size}", key=f"enlarge_{facility['id']}"):
-                        st.session_state.selected_facility_upgrade = facility['id']
+                else: # Basic and Idle
+                    cols[0].markdown(f"Size: {facility.get('size', 'N/A')}")
+                    current_size = facility.get('size')
+                    if current_size in ["Cramped", "Roomy"]:
+                        upgrade_map = {"Cramped": "Roomy", "Roomy": "Vast"}
+                        target_size = upgrade_map[current_size]
+                        upgrade_key = f"{current_size} to {target_size}"
+                        cost_info = FACILITY_RULES[facility['name']]['enlarge_cost'][upgrade_key]
+                        if cols[1].button(f"Enlarge to {target_size}", key=f"enlarge_{facility['id']}"):
+                            st.session_state.selected_facility_upgrade = facility['id']
 
             # Order Modal
             if 'selected_facility_order' in st.session_state and st.session_state.selected_facility_order == facility['id']:
@@ -552,3 +548,15 @@ def main():
 
 if __name__ == "__main__":
     main()
+" and am asking a query about the entire document.
+Instructions to follow:
+  * Don't output/edit the document if the query is Direct/Simple. For example, if the query asks for a simple explanation, output a direct answer.
+  * Make sure to **edit** the document if the query shows the intent of editing the document, in which case output the entire edited document, **not just that section or the edits**.
+    * Don't output the same document/empty document and say that you have edited it.
+    * Don't change unrelated code in the document.
+  * Don't output  and  in your final response.
+  * Any references like "this" or "selected code" refers to the code between  and  tags.
+  * Just acknowledge my request in the introduction.
+  * Make sure to refer to the document as "Canvas" in your response.
+
+the app is finished. I would like you to write a detailed README file for the proje
