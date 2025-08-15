@@ -140,18 +140,18 @@ BASTION_EVENTS = {
 
 FACILITY_RULES = {
     # --- Basic Facilities ---
-    "Bedroom": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}},
-    "Dining Room": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}},
-    "Parlor": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}},
-    "Courtyard": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}},
-    "Kitchen": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}},
-    "Storage": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}},
+    "Bedroom": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}, "enlarge_cost": {"Cramped to Roomy": {"cost_gp": 500, "time_days": 25}, "Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Dining Room": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}, "enlarge_cost": {"Cramped to Roomy": {"cost_gp": 500, "time_days": 25}, "Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Parlor": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}, "enlarge_cost": {"Cramped to Roomy": {"cost_gp": 500, "time_days": 25}, "Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Courtyard": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}, "enlarge_cost": {"Cramped to Roomy": {"cost_gp": 500, "time_days": 25}, "Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Kitchen": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}, "enlarge_cost": {"Cramped to Roomy": {"cost_gp": 500, "time_days": 25}, "Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Storage": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}, "enlarge_cost": {"Cramped to Roomy": {"cost_gp": 500, "time_days": 25}, "Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
     
     # --- Level 5 Special Facilities ---
     "Arcane Study": {"type": "Special", "level": 5, "orders": {"Craft: Arcane Focus": {"duration": 7, "cost_gp": 0}, "Craft: Book": {"duration": 7, "cost_gp": 10}, "Craft: Magic Item (Arcana)": {"duration": 20, "cost_gp": 250}}},
     "Armory": {"type": "Special", "level": 5, "orders": {"Stock Armory": {"duration": 7, "cost_gp": 100}}},
-    "Barrack": {"type": "Special", "level": 5, "orders": {"Recruit: Bastion Defenders (4)": {"duration": 7, "cost_gp": 0}}},
-    "Garden": {"type": "Special", "level": 5, "orders": {"Harvest: Decorative": {"duration": 7, "cost_gp": 0}, "Harvest: Food": {"duration": 7, "cost_gp": 0}, "Harvest: Herb": {"duration": 7, "cost_gp": 0}, "Harvest: Poison": {"duration": 7, "cost_gp": 0}}},
+    "Barrack": {"type": "Special", "level": 5, "orders": {"Recruit: Bastion Defenders (4)": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 0}}}, # Time is not specified, assuming instant for now
+    "Garden": {"type": "Special", "level": 5, "orders": {"Harvest: Decorative": {"duration": 7, "cost_gp": 0}, "Harvest: Food": {"duration": 7, "cost_gp": 0}, "Harvest: Herb": {"duration": 7, "cost_gp": 0}, "Harvest: Poison": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 0}}},
     "Library": {"type": "Special", "level": 5, "orders": {"Research: Topical Lore": {"duration": 7, "cost_gp": 0}}},
     "Sanctuary": {"type": "Special", "level": 5, "orders": {"Craft: Sacred Focus": {"duration": 7, "cost_gp": 0}}},
     "Smithy": {"type": "Special", "level": 5, "orders": {"Craft: Smith's Tools Item": {"duration": 14, "cost_gp": 50}, "Craft: Magic Item (Armament)": {"duration": 20, "cost_gp": 250}}},
@@ -164,18 +164,18 @@ FACILITY_RULES = {
     "Laboratory": {"type": "Special", "level": 9, "orders": {"Craft: Alchemist's Supplies": {"duration": 7, "cost_gp": 25}, "Craft: Poison": {"duration": 7, "cost_gp": 50}}},
     "Sacristy": {"type": "Special", "level": 9, "orders": {"Craft: Holy Water": {"duration": 7, "cost_gp": 25}, "Craft: Magic Item (Relic)": {"duration": 20, "cost_gp": 250}}},
     "Scriptorium": {"type": "Special", "level": 9, "orders": {"Craft: Book Replica": {"duration": 7, "cost_gp": 10}, "Craft: Spell Scroll": {"duration": 5, "cost_gp": 100}, "Craft: Paperwork": {"duration": 7, "cost_gp": 50}}},
-    "Stable": {"type": "Special", "level": 9, "orders": {"Buy/Sell Animals": {"duration": 7, "cost_gp": 0}}},
+    "Stable": {"type": "Special", "level": 9, "orders": {"Buy/Sell Animals": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 0}}},
     "Teleportation Circle": {"type": "Special", "level": 9, "orders": {"Recruit: Spellcaster": {"duration": 7, "cost_gp": 0}}},
     "Theater": {"type": "Special", "level": 9, "orders": {"Stage Production": {"duration": 21, "cost_gp": 100}}},
     "Training Area": {"type": "Special", "level": 9, "orders": {"Train: Battle Expert": {"duration": 7, "cost_gp": 0}, "Train: Skills Expert": {"duration": 7, "cost_gp": 0}}},
     "Trophy Room": {"type": "Special", "level": 9, "orders": {"Research: Lore": {"duration": 7, "cost_gp": 0}, "Research: Trinket Trophy": {"duration": 7, "cost_gp": 0}}},
     
     # --- Level 13 Special Facilities ---
-    "Archive": {"type": "Special", "level": 13, "orders": {"Research: Helpful Lore": {"duration": 7, "cost_gp": 0}}},
+    "Archive": {"type": "Special", "level": 13, "orders": {"Research: Helpful Lore": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 0}}},
     "Meditation Chamber": {"type": "Special", "level": 13, "orders": {"Empower: Inner Peace": {"duration": 7, "cost_gp": 0}}},
     "Menagerie": {"type": "Special", "level": 13, "orders": {"Recruit: Creature (Ape)": {"duration": 7, "cost_gp": 500}, "Recruit: Creature (Lion)": {"duration": 7, "cost_gp": 1000}}},
     "Observatory": {"type": "Special", "level": 13, "orders": {"Empower: Eldritch Discovery": {"duration": 7, "cost_gp": 0}}},
-    "Pub": {"type": "Special", "level": 13, "orders": {"Research: Information Gathering": {"duration": 7, "cost_gp": 0}}},
+    "Pub": {"type": "Special", "level": 13, "orders": {"Research: Information Gathering": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 0}}},
     "Reliquary": {"type": "Special", "level": 13, "orders": {"Harvest: Talisman": {"duration": 7, "cost_gp": 0}}},
     
     # --- Level 17 Special Facilities ---
@@ -325,8 +325,22 @@ def proprietor_view(data):
                 else:
                     if cols[2].button("Issue Order", key=f"order_{facility['id']}"):
                         st.session_state.selected_facility = facility['id']
-            else:
+            else: # Basic Facility
                 cols[0].markdown(f"Size: {facility.get('size', 'N/A')}")
+                # Add Upgrade button for Basic Facilities
+                current_size = facility.get('size')
+                if current_size in ["Cramped", "Roomy"]:
+                    upgrade_map = {"Cramped": "Roomy", "Roomy": "Vast"}
+                    target_size = upgrade_map[current_size]
+                    upgrade_key = f"{current_size} to {target_size}"
+                    cost_info = FACILITY_RULES[facility['name']]['enlarge_cost'][upgrade_key]
+                    if cols[1].button(f"Enlarge to {target_size}", key=f"enlarge_{facility['id']}"):
+                        # Placeholder for construction order
+                        st.success(f"Enlargement to {target_size} ordered for {cost_info['cost_gp']} GP.")
+                        add_log_entry(data['campaign']['current_day'], f"{char_name} has begun enlarging their {facility['name']} to {target_size}.")
+                        time.sleep(1)
+                        st.rerun()
+
 
             if 'selected_facility' in st.session_state and st.session_state.selected_facility == facility['id']:
                 with st.form(key=f"form_{facility['id']}"):
