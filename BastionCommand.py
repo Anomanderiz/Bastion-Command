@@ -149,41 +149,41 @@ FACILITY_RULES = {
     "Storage": {"type": "Basic", "add_cost": {"Cramped": {"cost_gp": 500, "time_days": 20}, "Roomy": {"cost_gp": 1000, "time_days": 45}, "Vast": {"cost_gp": 3000, "time_days": 125}}, "enlarge_cost": {"Cramped to Roomy": {"cost_gp": 500, "time_days": 25}, "Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
     
     # --- Level 5 Special Facilities ---
-    "Arcane Study": {"type": "Special", "level": 5, "orders": {"Craft: Arcane Focus": {"duration": 7, "cost_gp": 0}, "Craft: Book": {"duration": 7, "cost_gp": 10}, "Craft: Magic Item (Arcana)": {"duration": 20, "cost_gp": 250}}},
-    "Armory": {"type": "Special", "level": 5, "orders": {"Stock Armory": {"duration": 7, "cost_gp": 100}}},
-    "Barrack": {"type": "Special", "level": 5, "orders": {"Recruit: Bastion Defenders (4)": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
-    "Garden": {"type": "Special", "level": 5, "orders": {"Harvest: Decorative": {"duration": 7, "cost_gp": 0}, "Harvest: Food": {"duration": 7, "cost_gp": 0}, "Harvest: Herb": {"duration": 7, "cost_gp": 0}, "Harvest: Poison": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
-    "Library": {"type": "Special", "level": 5, "orders": {"Research: Topical Lore": {"duration": 7, "cost_gp": 0}}},
-    "Sanctuary": {"type": "Special", "level": 5, "orders": {"Craft: Sacred Focus": {"duration": 7, "cost_gp": 0}}},
-    "Smithy": {"type": "Special", "level": 5, "orders": {"Craft: Smith's Tools Item": {"duration": 14, "cost_gp": 50}, "Craft: Magic Item (Armament)": {"duration": 20, "cost_gp": 250}}},
-    "Storehouse": {"type": "Special", "level": 5, "orders": {"Procure Goods (500 GP)": {"duration": 7, "cost_gp": 500}, "Sell Goods": {"duration": 7, "cost_gp": 0}}},
-    "Workshop": {"type": "Special", "level": 5, "orders": {"Craft: Adventuring Gear": {"duration": 10, "cost_gp": 25}, "Craft: Magic Item (Implement)": {"duration": 20, "cost_gp": 250}}},
+    "Arcane Study": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Craft: Arcane Focus": {"duration": 7, "cost_gp": 0}, "Craft: Book": {"duration": 7, "cost_gp": 10}, "Craft: Magic Item (Arcana)": {"duration": 20, "cost_gp": 250}}},
+    "Armory": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Stock Armory": {"duration": 7, "cost_gp": 100}}},
+    "Barrack": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Recruit: Bastion Defenders (4)": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Garden": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Harvest: Decorative": {"duration": 7, "cost_gp": 0}, "Harvest: Food": {"duration": 7, "cost_gp": 0}, "Harvest: Herb": {"duration": 7, "cost_gp": 0}, "Harvest: Poison": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Library": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Research: Topical Lore": {"duration": 7, "cost_gp": 0}}},
+    "Sanctuary": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Craft: Sacred Focus": {"duration": 7, "cost_gp": 0}}},
+    "Smithy": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Craft: Smith's Tools Item": {"duration": 14, "cost_gp": 50}, "Craft: Magic Item (Armament)": {"duration": 20, "cost_gp": 250}}},
+    "Storehouse": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Procure Goods (500 GP)": {"duration": 7, "cost_gp": 500}, "Sell Goods": {"duration": 7, "cost_gp": 0}}},
+    "Workshop": {"type": "Special", "level": 5, "size": "Roomy", "orders": {"Craft: Adventuring Gear": {"duration": 10, "cost_gp": 25}, "Craft: Magic Item (Implement)": {"duration": 20, "cost_gp": 250}}},
 
     # --- Level 9 Special Facilities ---
-    "Gaming Hall": {"type": "Special", "level": 9, "orders": {"Run Gambling Hall": {"duration": 7, "cost_gp": 0}}},
-    "Greenhouse": {"type": "Special", "level": 9, "orders": {"Harvest: Healing Herbs": {"duration": 7, "cost_gp": 0}, "Harvest: Poison": {"duration": 7, "cost_gp": 0}}},
-    "Laboratory": {"type": "Special", "level": 9, "orders": {"Craft: Alchemist's Supplies": {"duration": 7, "cost_gp": 25}, "Craft: Poison": {"duration": 7, "cost_gp": 50}}},
-    "Sacristy": {"type": "Special", "level": 9, "orders": {"Craft: Holy Water": {"duration": 7, "cost_gp": 25}, "Craft: Magic Item (Relic)": {"duration": 20, "cost_gp": 250}}},
-    "Scriptorium": {"type": "Special", "level": 9, "orders": {"Craft: Book Replica": {"duration": 7, "cost_gp": 10}, "Craft: Spell Scroll": {"duration": 5, "cost_gp": 100}, "Craft: Paperwork": {"duration": 7, "cost_gp": 50}}},
-    "Stable": {"type": "Special", "level": 9, "orders": {"Buy/Sell Animals": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
-    "Teleportation Circle": {"type": "Special", "level": 9, "orders": {"Recruit: Spellcaster": {"duration": 7, "cost_gp": 0}}},
-    "Theater": {"type": "Special", "level": 9, "orders": {"Stage Production": {"duration": 21, "cost_gp": 100}}},
-    "Training Area": {"type": "Special", "level": 9, "orders": {"Train: Battle Expert": {"duration": 7, "cost_gp": 0}, "Train: Skills Expert": {"duration": 7, "cost_gp": 0}}},
-    "Trophy Room": {"type": "Special", "level": 9, "orders": {"Research: Lore": {"duration": 7, "cost_gp": 0}, "Research: Trinket Trophy": {"duration": 7, "cost_gp": 0}}},
+    "Gaming Hall": {"type": "Special", "level": 9, "size": "Vast", "orders": {"Run Gambling Hall": {"duration": 7, "cost_gp": 0}}},
+    "Greenhouse": {"type": "Special", "level": 9, "size": "Roomy", "orders": {"Harvest: Healing Herbs": {"duration": 7, "cost_gp": 0}, "Harvest: Poison": {"duration": 7, "cost_gp": 0}}},
+    "Laboratory": {"type": "Special", "level": 9, "size": "Roomy", "orders": {"Craft: Alchemist's Supplies": {"duration": 7, "cost_gp": 25}, "Craft: Poison": {"duration": 7, "cost_gp": 50}}},
+    "Sacristy": {"type": "Special", "level": 9, "size": "Roomy", "orders": {"Craft: Holy Water": {"duration": 7, "cost_gp": 25}, "Craft: Magic Item (Relic)": {"duration": 20, "cost_gp": 250}}},
+    "Scriptorium": {"type": "Special", "level": 9, "size": "Roomy", "orders": {"Craft: Book Replica": {"duration": 7, "cost_gp": 10}, "Craft: Spell Scroll": {"duration": 5, "cost_gp": 100}, "Craft: Paperwork": {"duration": 7, "cost_gp": 50}}},
+    "Stable": {"type": "Special", "level": 9, "size": "Roomy", "orders": {"Buy/Sell Animals": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Teleportation Circle": {"type": "Special", "level": 9, "size": "Roomy", "orders": {"Recruit: Spellcaster": {"duration": 7, "cost_gp": 0}}},
+    "Theater": {"type": "Special", "level": 9, "size": "Vast", "orders": {"Stage Production": {"duration": 21, "cost_gp": 100}}},
+    "Training Area": {"type": "Special", "level": 9, "size": "Vast", "orders": {"Train: Battle Expert": {"duration": 7, "cost_gp": 0}, "Train: Skills Expert": {"duration": 7, "cost_gp": 0}}},
+    "Trophy Room": {"type": "Special", "level": 9, "size": "Roomy", "orders": {"Research: Lore": {"duration": 7, "cost_gp": 0}, "Research: Trinket Trophy": {"duration": 7, "cost_gp": 0}}},
     
     # --- Level 13 Special Facilities ---
-    "Archive": {"type": "Special", "level": 13, "orders": {"Research: Helpful Lore": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
-    "Meditation Chamber": {"type": "Special", "level": 13, "orders": {"Empower: Inner Peace": {"duration": 7, "cost_gp": 0}}},
-    "Menagerie": {"type": "Special", "level": 13, "orders": {"Recruit: Creature (Ape)": {"duration": 7, "cost_gp": 500}, "Recruit: Creature (Lion)": {"duration": 7, "cost_gp": 1000}}},
-    "Observatory": {"type": "Special", "level": 13, "orders": {"Empower: Eldritch Discovery": {"duration": 7, "cost_gp": 0}}},
-    "Pub": {"type": "Special", "level": 13, "orders": {"Research: Information Gathering": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
-    "Reliquary": {"type": "Special", "level": 13, "orders": {"Harvest: Talisman": {"duration": 7, "cost_gp": 0}}},
+    "Archive": {"type": "Special", "level": 13, "size": "Roomy", "orders": {"Research: Helpful Lore": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Meditation Chamber": {"type": "Special", "level": 13, "size": "Cramped", "orders": {"Empower: Inner Peace": {"duration": 7, "cost_gp": 0}}},
+    "Menagerie": {"type": "Special", "level": 13, "size": "Vast", "orders": {"Recruit: Creature (Ape)": {"duration": 7, "cost_gp": 500}, "Recruit: Creature (Lion)": {"duration": 7, "cost_gp": 1000}}},
+    "Observatory": {"type": "Special", "level": 13, "size": "Roomy", "orders": {"Empower: Eldritch Discovery": {"duration": 7, "cost_gp": 0}}},
+    "Pub": {"type": "Special", "level": 13, "size": "Roomy", "orders": {"Research: Information Gathering": {"duration": 7, "cost_gp": 0}}, "enlarge_cost": {"Roomy to Vast": {"cost_gp": 2000, "time_days": 80}}},
+    "Reliquary": {"type": "Special", "level": 13, "size": "Cramped", "orders": {"Harvest: Talisman": {"duration": 7, "cost_gp": 0}}},
     
     # --- Level 17 Special Facilities ---
-    "Demiplane": {"type": "Special", "level": 17, "orders": {"Empower: Arcane Resilience": {"duration": 7, "cost_gp": 0}}},
-    "Guildhall": {"type": "Special", "level": 17, "orders": {"Assign: Adventurers' Guild": {"duration": 7, "cost_gp": 100}, "Assign: Thieves' Guild": {"duration": 7, "cost_gp": 250}}},
-    "Sanctum": {"type": "Special", "level": 17, "orders": {"Empower: Fortifying Rites": {"duration": 7, "cost_gp": 0}}},
-    "War Room": {"type": "Special", "level": 17, "orders": {"Recruit: Lieutenant": {"duration": 7, "cost_gp": 0}, "Recruit: Soldiers (100)": {"duration": 7, "cost_gp": 100}}},
+    "Demiplane": {"type": "Special", "level": 17, "size": "Vast", "orders": {"Empower: Arcane Resilience": {"duration": 7, "cost_gp": 0}}},
+    "Guildhall": {"type": "Special", "level": 17, "size": "Vast", "orders": {"Assign: Adventurers' Guild": {"duration": 7, "cost_gp": 100}, "Assign: Thieves' Guild": {"duration": 7, "cost_gp": 250}}},
+    "Sanctum": {"type": "Special", "level": 17, "size": "Roomy", "orders": {"Empower: Fortifying Rites": {"duration": 7, "cost_gp": 0}}},
+    "War Room": {"type": "Special", "level": 17, "size": "Vast", "orders": {"Recruit: Lieutenant": {"duration": 7, "cost_gp": 0}, "Recruit: Soldiers (100)": {"duration": 7, "cost_gp": 100}}},
 }
 
 # --- DATA FETCHING & STATE MANAGEMENT ---
@@ -261,6 +261,11 @@ def add_log_entry(day, message, campaign_id=1):
         except Exception as e:
             st.warning(f"Could not save log to database: {e}")
 
+def refresh_data():
+    """Clears the data cache and reruns the app to reflect changes."""
+    st.cache_data.clear()
+    st.rerun()
+
 # --- UI: PROPRIETOR VIEW ---
 def proprietor_view(data):
     st.title("✒️ Proprietor's Ledger")
@@ -302,7 +307,7 @@ def proprietor_view(data):
         st.success(f"Maintain order issued. Rolled {roll}: {event_name}!")
         add_log_entry(data['campaign']['current_day'], message)
         time.sleep(1)
-        st.rerun()
+        refresh_data()
 
     for facility in sorted(bastion['facilities'], key=lambda f: (f['type'], f['name'])):
         with st.container():
@@ -317,17 +322,15 @@ def proprietor_view(data):
                     st.markdown(f"Status: <span style='color: #F7DC6F;'>{facility['status']}</span>", unsafe_allow_html=True)
                     st.progress(progress / duration if duration > 0 else 0, text=f"{progress}/{duration} Days")
                 else:
-                    if facility['type'] == 'Special':
-                        st.markdown(f"Status: <span style='color: #82E0AA;'>Idle</span>", unsafe_allow_html=True)
-                    else: # Basic and Idle
-                        st.markdown(f"Size: {facility.get('size', 'N/A')}")
+                    st.markdown(f"Status: <span style='color: #82E0AA;'>Idle</span>", unsafe_allow_html=True)
+                    st.markdown(f"Size: {facility.get('size', 'N/A')}")
             
             with cols[1]:
                 if is_busy:
                     if st.button("Cancel Order", key=f"cancel_{facility['id']}"):
                         supabase.table("facilities").update({"status": "Idle", "order_progress": 0, "order_duration": 0}).eq("id", facility['id']).execute()
                         add_log_entry(data['campaign']['current_day'], f"{char_name} cancelled the order '{facility['status']}' at the {facility['name']}.")
-                        st.rerun()
+                        refresh_data()
                 else: # Facility is Idle
                     if facility['type'] == 'Basic':
                         current_size = facility.get('size')
@@ -338,11 +341,15 @@ def proprietor_view(data):
                             cost_info = FACILITY_RULES[facility['name']]['enlarge_cost'][upgrade_key]
                             if st.button(f"Enlarge to {target_size}", key=f"enlarge_{facility['id']}"):
                                 st.session_state.selected_facility_upgrade = facility['id']
-            
+                                # Rerun to open the modal immediately
+                                st.rerun()
+
             with cols[2]:
                 if not is_busy and facility['type'] == 'Special':
                     if st.button("Issue Order", key=f"order_{facility['id']}"):
                         st.session_state.selected_facility_order = facility['id']
+                        # Rerun to open the modal immediately
+                        st.rerun()
 
             # --- Modals for Orders and Upgrades ---
             # Order Modal
@@ -354,15 +361,22 @@ def proprietor_view(data):
                     if order_choice:
                         order_details = rules["orders"][order_choice]
                         st.caption(f"Duration: {order_details['duration']} days | Cost: {order_details['cost_gp']} GP")
-                        if st.form_submit_button("Confirm Order"):
-                            supabase.table("facilities").update({
-                                "status": order_choice, 
-                                "order_progress": 0, 
-                                "order_duration": order_details['duration']
-                            }).eq("id", facility['id']).execute()
-                            add_log_entry(data['campaign']['current_day'], f"{char_name}'s {facility['name']} began the order: {order_choice}.")
-                            del st.session_state.selected_facility_order
-                            st.rerun()
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.form_submit_button("Confirm Order"):
+                                supabase.table("facilities").update({
+                                    "status": order_choice, 
+                                    "order_progress": 0, 
+                                    "order_duration": order_details['duration']
+                                }).eq("id", facility['id']).execute()
+                                add_log_entry(data['campaign']['current_day'], f"{char_name}'s {facility['name']} began the order: {order_choice}.")
+                                del st.session_state.selected_facility_order
+                                refresh_data()
+                        with col2:
+                            if st.form_submit_button("Cancel", type="secondary"):
+                                del st.session_state.selected_facility_order
+                                st.rerun()
                             
             # Upgrade Modal
             if 'selected_facility_upgrade' in st.session_state and st.session_state.selected_facility_upgrade == facility['id']:
@@ -375,15 +389,21 @@ def proprietor_view(data):
                     st.subheader(f"Enlarge {facility['name']} to {target_size}")
                     st.caption(f"Duration: {cost_info['time_days']} days | Cost: {cost_info['cost_gp']} GP")
 
-                    if st.form_submit_button("Confirm Enlargement"):
-                        supabase.table("facilities").update({
-                            "status": f"Enlarging to {target_size}",
-                            "order_progress": 0,
-                            "order_duration": cost_info['time_days']
-                        }).eq("id", facility['id']).execute()
-                        add_log_entry(data['campaign']['current_day'], f"{char_name} has begun enlarging their {facility['name']} to {target_size}.")
-                        del st.session_state.selected_facility_upgrade
-                        st.rerun()
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        if st.form_submit_button("Confirm Enlargement"):
+                            supabase.table("facilities").update({
+                                "status": f"Enlarging to {target_size}",
+                                "order_progress": 0,
+                                "order_duration": cost_info['time_days']
+                            }).eq("id", facility['id']).execute()
+                            add_log_entry(data['campaign']['current_day'], f"{char_name} has begun enlarging their {facility['name']} to {target_size}.")
+                            del st.session_state.selected_facility_upgrade
+                            refresh_data()
+                    with col2:
+                        if st.form_submit_button("Cancel", type="secondary"):
+                            del st.session_state.selected_facility_upgrade
+                            st.rerun()
 
     st.markdown("---")
     st.subheader("Acquire New Facilities")
@@ -403,16 +423,21 @@ def proprietor_view(data):
         if available_special:
             new_special = st.selectbox("Choose a new Special Facility to acquire:", available_special)
             if st.button(f"Acquire {new_special} (Free with level up)"):
+                # --- FIX: Ensure new special facilities have a size ---
+                facility_size = FACILITY_RULES.get(new_special, {}).get('size', 'Roomy') # Default to Roomy if not specified
                 supabase.table("facilities").insert({
                     "bastion_id": bastion['id'],
                     "name": new_special,
                     "type": "Special",
-                    "status": "Idle"
+                    "status": "Idle",
+                    "size": facility_size,
+                    "order_progress": 0,
+                    "order_duration": 0
                 }).execute()
                 add_log_entry(data['campaign']['current_day'], f"{char_name} has acquired a new facility: {new_special}!")
                 st.success(f"{new_special} has been added to your bastion!")
                 time.sleep(1)
-                st.rerun()
+                refresh_data()
         else:
             st.info("No new Special Facilities available at your current level.")
     else:
@@ -442,7 +467,7 @@ def proprietor_view(data):
         add_log_entry(data['campaign']['current_day'], f"{char_name} has begun construction on a new {new_basic_name} ({new_basic_size}).")
         st.success(f"Construction order for {new_basic_name} has been issued!")
         time.sleep(1)
-        st.rerun()
+        refresh_data()
 
 # --- UI: COMMUNAL VIEW ---
 def communal_view(data):
@@ -484,32 +509,30 @@ def dm_view(data):
         
         if submitted:
             with st.spinner(f"Advancing time by {days_to_advance} days..."):
+                # Fetch the absolute latest state before processing
+                fresh_data = load_data(campaign['id'])
                 all_facilities = [
                     (bastion, facility) 
-                    for bastion in data['bastions'] 
+                    for bastion in fresh_data['bastions'] 
                     for facility in bastion['facilities'] 
                     if facility.get('status', 'Idle') != 'Idle'
                 ]
 
-                # --- REFACTORED TIME ADVANCEMENT LOGIC ---
                 # Process day by day for accurate logging.
                 for day_offset in range(1, days_to_advance + 1):
                     day_in_progress = current_day + day_offset
                     
-                    # Create a list of updates to send to the database for this day.
                     daily_updates = []
 
                     for bastion, facility in all_facilities:
-                        # Skip facilities that have already completed their task in this time advance cycle
                         if facility.get('status', 'Idle') == 'Idle':
                             continue
 
                         new_progress = facility['order_progress'] + 1
                         
                         if new_progress >= facility['order_duration']:
-                            # Order is complete on this specific day
                             completed_order = facility['status']
-                            owner = next(c for c in data['characters'] if c['id'] == bastion['character_id'])
+                            owner = next(c for c in fresh_data['characters'] if c['id'] == bastion['character_id'])
                             
                             update_payload = {"status": "Idle", "order_progress": 0, "order_duration": 0}
                             
@@ -525,19 +548,14 @@ def dm_view(data):
                             
                             add_log_entry(day_in_progress, log_message)
                             
-                            # Mark facility as idle so it's not processed again
                             facility['status'] = 'Idle' 
                             
-                            # Update the database
                             supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
 
                         else:
-                            # Order is still in progress, update its progress in the local state
                             facility['order_progress'] = new_progress
-                            # Schedule a database update for the end of the day's processing
                             daily_updates.append({"id": facility['id'], "order_progress": new_progress})
                     
-                    # Batch update progress for all ongoing projects for the current day
                     for update in daily_updates:
                          supabase.table("facilities").update({"order_progress": update["order_progress"]}).eq("id", update["id"]).execute()
 
@@ -546,8 +564,9 @@ def dm_view(data):
                 supabase.table("campaigns").update({"current_day": new_day}).eq("id", campaign['id']).execute()
             
             st.success(f"Time advanced by {days_to_advance} days. New day is {new_day}.")
-            time.sleep(1) # Brief pause to allow user to read the message
-            st.rerun()
+            
+            time.sleep(1) 
+            refresh_data()
 
 # --- MAIN APP ROUTER ---
 def main():
@@ -555,6 +574,8 @@ def main():
     if 'data' not in st.session_state:
         st.session_state.data = None
     
+    # Load data only if it's not already in the session state.
+    # The `refresh_data` function will handle clearing this when needed.
     if st.session_state.data is None:
         with st.spinner("Summoning Mortimer from the archives..."):
             st.session_state.data = load_data()
@@ -578,11 +599,10 @@ def main():
         st.session_state.current_player = player_list[0] if player_list else None
     
     if st.session_state.current_player:
-        # Use the index to handle potential list changes without crashing
         try:
             current_index = player_list.index(st.session_state.current_player)
         except ValueError:
-            current_index = 0 # Default to the first player if the last selected one is gone
+            current_index = 0 
 
         selected_player = st.sidebar.selectbox("Select Your Character:", options=player_list, index=current_index)
         st.session_state.current_player = selected_player
