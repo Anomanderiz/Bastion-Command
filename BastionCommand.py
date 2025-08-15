@@ -193,7 +193,7 @@ def load_data(campaign_id=1):
     try:
         campaign_response = supabase.table("campaigns").select("*").eq("id", campaign_id).execute()
         if not campaign_response.data:
-            return None # No campaign found, return None to be handled by the main app
+            return None 
         campaign = campaign_response.data[0]
 
         characters = supabase.table("characters").select("*").eq("campaign_id", campaign_id).execute().data
@@ -271,9 +271,14 @@ def proprietor_view(data):
         st.warning("Please select a valid character from the sidebar.")
         return
 
+    # --- LEVEL CHECK ---
+    if character['level'] < 5:
+        st.warning(f"As a level {character['level']} adventurer, you have not yet earned the right to a Bastion. Return when you have attained the 5th level of experience.")
+        return
+
     bastion = next((b for b in data['bastions'] if b['character_id'] == character['id']), None)
     if not bastion:
-        st.error(f"No bastion found for {char_name}.")
+        st.error(f"No bastion found for {char_name}. Please ensure one is created in the Supabase table.")
         return
 
     st.header(f"{bastion['name']}")
@@ -343,7 +348,59 @@ def proprietor_view(data):
 
     st.markdown("---")
     st.subheader("Acquire New Facilities")
-    # (Acquisition logic would need Supabase INSERTs and is omitted for brevity)
+
+    # Special Facilities
+    num_special_facilities = len([f for f in bastion['facilities'] if f['type'] == 'Special'])
+    max_special_facilities = 0
+    for level_req in sorted(SPECIAL_FACILITY_ACQUISITION.keys()):
+        if character['level'] >= level_req:
+            max_special_facilities = SPECIAL_FACILITY_ACQUISITION[level_req]
+
+    st.markdown(f"**Special Facilities:** {num_special_facilities} / {max_special_facilities} owned.")
+    if num_special_facilities < max_special_facilities:
+        owned_names = [f['name'] for f in bastion['facilities']]
+        available_special = [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Special' and name not in owned_names and character['level'] >= rules['level']]
+        
+        if available_special:
+            new_special = st.selectbox("Choose a new Special Facility to acquire:", available_special)
+            if st.button(f"Acquire {new_special} (Free with level up)"):
+                supabase.table("facilities").insert({
+                    "bastion_id": bastion['id'],
+                    "name": new_special,
+                    "type": "Special",
+                    "status": "Idle"
+                }).execute()
+                add_log_entry(data['campaign']['current_day'], f"{char_name} has acquired a new facility: {new_special}!")
+                st.success(f"{new_special} has been added to your bastion!")
+                time.sleep(1)
+                st.rerun()
+        else:
+            st.info("No new Special Facilities available at your current level.")
+    else:
+        st.info("You have reached your maximum number of Special Facilities for your level.")
+
+    # Basic Facilities
+    st.markdown("**Basic Facilities:**")
+    available_basic = [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Basic']
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        new_basic_name = st.selectbox("Choose a Basic Facility to build:", available_basic)
+    with col2:
+        new_basic_size = st.selectbox("Choose size:", ["Cramped", "Roomy", "Vast"])
+
+    cost_info = FACILITY_RULES[new_basic_name]['add_cost'][new_basic_size]
+    if st.button(f"Build {new_basic_name} ({new_basic_size}) - Cost: {cost_info['cost_gp']} GP, Time: {cost_info['time_days']} days"):
+        supabase.table("facilities").insert({
+            "bastion_id": bastion['id'],
+            "name": new_basic_name,
+            "type": "Basic",
+            "size": new_basic_size
+        }).execute()
+        add_log_entry(data['campaign']['current_day'], f"{char_name} has begun construction on a new {new_basic_name} ({new_basic_size}).")
+        st.success(f"Construction order for {new_basic_name} has been issued!")
+        time.sleep(1)
+        st.rerun()
 
 # --- UI: COMMUNAL VIEW ---
 def communal_view(data):
