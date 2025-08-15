@@ -235,7 +235,6 @@ def send_to_discord(message):
     data = {
         "content": formatted_content,
         "username": "Mortimer",
-        "avatar_url": "https://i.imgur.com/8c12dAS.png" # A suitable butler icon
     }
     try:
         response = requests.post(webhook_url, json=data)
@@ -481,3 +480,4 @@ elif view == "Proprietor's View":
     proprietor_view()
 elif view == "DM View":
     dm_view()
+
