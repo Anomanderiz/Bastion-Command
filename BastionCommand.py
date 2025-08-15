@@ -191,12 +191,19 @@ def load_data(campaign_id=1):
     """Loads all necessary data from Supabase for a given campaign."""
     if not supabase: return None
     try:
-        campaign = supabase.table("campaigns").select("*").eq("id", campaign_id).single().execute().data
+        campaign_response = supabase.table("campaigns").select("*").eq("id", campaign_id).execute()
+        if not campaign_response.data:
+            return None # No campaign found, return None to be handled by the main app
+        campaign = campaign_response.data[0]
+
         characters = supabase.table("characters").select("*").eq("campaign_id", campaign_id).execute().data
         bastions_raw = supabase.table("bastions").select("*, characters(*)").eq("characters.campaign_id", campaign_id).execute().data
         
         bastion_ids = [b['id'] for b in bastions_raw]
-        facilities = supabase.table("facilities").select("*").in_("bastion_id", bastion_ids).execute().data
+        facilities = []
+        if bastion_ids:
+            facilities = supabase.table("facilities").select("*").in_("bastion_id", bastion_ids).execute().data
+            
         log = supabase.table("bastion_log").select("*").eq("campaign_id", campaign_id).order("created_at", desc=True).limit(20).execute().data
 
         bastions = []
@@ -396,8 +403,13 @@ def main():
         with st.spinner("Summoning Mortimer from the archives..."):
             st.session_state.data = load_data()
 
-    if not supabase or not st.session_state.data:
-        st.error("Application could not initialize. Please check Supabase connection and ensure your campaign data is set up.")
+    if not supabase:
+        st.error("Application could not initialize. Please check Supabase connection.")
+        return
+        
+    if not st.session_state.data:
+        st.warning("No campaign data found. Please ensure a campaign with ID 1 exists in your Supabase 'campaigns' table and that you have populated the other tables correctly.")
+        st.info("Follow the data population guide to set up your first campaign.")
         return
 
     data = st.session_state.data
