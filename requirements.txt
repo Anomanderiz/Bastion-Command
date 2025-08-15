@@ -1,7 +1,0 @@
-# -------------------------------------------------
-# Python Dependencies for Bastion Manager Streamlit App
-# -------------------------------------------------
-streamlit==1.37.0
-supabase==2.5.0
-pandas==2.2.2
-requests==2.32.3
