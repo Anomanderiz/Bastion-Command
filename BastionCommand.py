@@ -281,13 +281,13 @@ def refresh_data():
 def get_log_style(log_entry):
     """Determines the CSS class for a log entry based on its content."""
     entry_lower = log_entry.lower()
-    if any(keyword in entry_lower for keyword in ["attack", "lost", "criminal"]):
+    if any(keyword in entry_lower for keyword in ["attack", "lost", "criminal", "tense", "siege"]):
         return "log-entry-negative"
     if any(keyword in entry_lower for keyword in ["treasure", "acquired", "magical discovery"]):
         return "log-entry-positive"
     if any(keyword in entry_lower for keyword in ["completed", "enlarged"]):
         return "log-entry-complete"
-    if any(keyword in entry_lower for keyword in ["began", "construction", "started"]):
+    if any(keyword in entry_lower for keyword in ["began", "construction", "started", "vigilant"]):
         return "log-entry-progress"
     return "log-entry" # Default style
 
@@ -593,24 +593,33 @@ def dm_view(data):
     st.subheader("Set Campaign Threat Level")
     threat_levels = ["Peaceful", "Vigilant", "Tense", "Under Siege"]
     current_threat = campaign.get('threat_level', 'Peaceful')
-    selected_threat = st.selectbox("Select Threat Level:", threat_levels, index=threat_levels.index(current_threat))
+    
+    if current_threat not in threat_levels:
+        current_threat = "Peaceful" 
+        
+    current_threat_index = threat_levels.index(current_threat)
+    selected_threat = st.selectbox("Select Threat Level:", threat_levels, index=current_threat_index)
+    
     if st.button("Update Threat Level"):
         supabase.table("campaigns").update({"threat_level": selected_threat}).eq("id", campaign['id']).execute()
         st.session_state.data['campaign']['threat_level'] = selected_threat
+        # --- FINAL ENHANCEMENT ---
+        add_log_entry(current_day, f"Mortimer notes a change in the regional disposition. The threat level is now considered '{selected_threat}'.")
         st.success(f"Threat level updated to {selected_threat}.")
         time.sleep(1)
         st.rerun()
 
     st.subheader("Inject Bastion Event")
     bastion_names = {b['id']: b['name'] for b in data['bastions']}
-    target_bastion_id = st.selectbox("Target Bastion:", options=list(bastion_names.keys()), format_func=lambda x: bastion_names[x])
-    event_to_inject = st.selectbox("Event to Trigger:", options=[name for r, name in BASTION_EVENTS.items()])
-    if st.button("Trigger Event"):
-        message = f"A special event occurred at {bastion_names[target_bastion_id]}: **{event_to_inject}**."
-        add_log_entry(current_day, message)
-        st.success(f"Injected '{event_to_inject}' event for {bastion_names[target_bastion_id]}.")
-        time.sleep(1)
-        st.rerun()
+    if bastion_names: # Only show if there are bastions to target
+        target_bastion_id = st.selectbox("Target Bastion:", options=list(bastion_names.keys()), format_func=lambda x: bastion_names[x])
+        event_to_inject = st.selectbox("Event to Trigger:", options=[name for r, name in BASTION_EVENTS.items()])
+        if st.button("Trigger Event"):
+            message = f"A special event occurred at {bastion_names[target_bastion_id]}: **{event_to_inject}**."
+            add_log_entry(current_day, message)
+            st.success(f"Injected '{event_to_inject}' event for {bastion_names[target_bastion_id]}.")
+            time.sleep(1)
+            st.rerun()
 
 
 # --- MAIN APP ROUTER ---
