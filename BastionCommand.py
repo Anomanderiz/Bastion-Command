@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-# from supabase import create_client, Client # Uncomment when ready
+import requests # Added for Discord integration
 import time
 import json
 import random
@@ -218,6 +218,33 @@ if 'current_player' not in st.session_state:
     st.session_state.current_player = "Elara Meadowlight"
 
 # --- HELPER FUNCTIONS ---
+def send_to_discord(message):
+    """Formats and sends a message to a Discord webhook stored in secrets."""
+    webhook_url = st.secrets.get("discord", {}).get("webhook_url")
+    if not webhook_url:
+        # Silently fail if the webhook is not configured in secrets.
+        return
+
+    # Format the message in Mortimer's voice
+    formatted_content = (
+        "My noble masters, I write to you of happenings at your bastion:\n"
+        f"```{message}```\n"
+        "Never you fear for Mortimer is here."
+    )
+
+    data = {
+        "content": formatted_content,
+        "username": "Mortimer",
+        "avatar_url": "https://i.imgur.com/8c12dAS.png" # A suitable butler icon
+    }
+    try:
+        response = requests.post(webhook_url, json=data)
+        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+    except requests.exceptions.RequestException as e:
+        # This will print the error to the Streamlit console for the app owner to see
+        print(f"Error sending message to Discord: {e}")
+
+
 def get_character_by_name(name):
     for char in st.session_state.data['characters']:
         if char['name'] == name: return char
@@ -229,7 +256,11 @@ def get_bastion_by_char_id(char_id):
     return None
 
 def add_log_entry(day, message):
-    st.session_state.data['log'].insert(0, f"Day {day}: {message}")
+    """Adds an entry to the in-app log and sends it to Discord."""
+    full_log_message = f"Day {day}: {message}"
+    st.session_state.data['log'].insert(0, full_log_message)
+    # Send the update to Discord
+    send_to_discord(full_log_message)
 
 # --- UI: PROPRIETOR VIEW ---
 def proprietor_view():
