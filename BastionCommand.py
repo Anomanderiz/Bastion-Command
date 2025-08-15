@@ -186,7 +186,7 @@ FACILITY_RULES = {
 }
 
 # --- DATA FETCHING & STATE MANAGEMENT ---
-@st.cache_data(ttl=60) # Cache data for 60 seconds
+@st.cache_data(ttl=60)
 def load_data(campaign_id=1):
     """Loads all necessary data from Supabase for a given campaign."""
     if not supabase: return None
@@ -199,7 +199,6 @@ def load_data(campaign_id=1):
         facilities = supabase.table("facilities").select("*").in_("bastion_id", bastion_ids).execute().data
         log = supabase.table("bastion_log").select("*").eq("campaign_id", campaign_id).order("created_at", desc=True).limit(20).execute().data
 
-        # Structure the data similarly to the old mock data for compatibility
         bastions = []
         for b_raw in bastions_raw:
             bastion = {
@@ -221,12 +220,6 @@ def load_data(campaign_id=1):
         st.error(f"An error occurred while fetching data from Supabase: {e}")
         return None
 
-if 'data' not in st.session_state:
-    st.session_state.data = load_data()
-
-if 'current_player' not in st.session_state and st.session_state.data:
-    st.session_state.current_player = st.session_state.data['characters'][0]['name'] if st.session_state.data['characters'] else None
-
 # --- HELPER FUNCTIONS ---
 def send_to_discord(message):
     """Formats and sends a message to a Discord webhook."""
@@ -247,9 +240,9 @@ def send_to_discord(message):
 def add_log_entry(day, message, campaign_id=1):
     """Adds an entry to the in-app log, Supabase, and sends it to Discord."""
     full_log_message = f"Day {day}: {message}"
-    st.session_state.data['log'].insert(0, full_log_message)
+    if 'data' in st.session_state and st.session_state.data:
+        st.session_state.data['log'].insert(0, full_log_message)
     send_to_discord(full_log_message)
-    # Write to Supabase
     if supabase:
         try:
             supabase.table("bastion_log").insert({
@@ -261,17 +254,17 @@ def add_log_entry(day, message, campaign_id=1):
             st.warning(f"Could not save log to database: {e}")
 
 # --- UI: PROPRIETOR VIEW ---
-def proprietor_view():
+def proprietor_view(data):
     st.title("✒️ Proprietor's Ledger")
     st.markdown("---")
 
     char_name = st.session_state.current_player
-    character = next((c for c in st.session_state.data['characters'] if c['name'] == char_name), None)
+    character = next((c for c in data['characters'] if c['name'] == char_name), None)
     if not character or character['name'] == "DM":
         st.warning("Please select a valid character from the sidebar.")
         return
 
-    bastion = next((b for b in st.session_state.data['bastions'] if b['character_id'] == character['id']), None)
+    bastion = next((b for b in data['bastions'] if b['character_id'] == character['id']), None)
     if not bastion:
         st.error(f"No bastion found for {char_name}.")
         return
@@ -293,11 +286,10 @@ def proprietor_view():
             new_defenders = max(0, bastion['defenders'] - losses)
             message += f" The bastion was attacked! It lost {losses} defenders. (Rolls: {dice_rolls})"
             supabase.table("bastions").update({"defenders": new_defenders}).eq("id", bastion['id']).execute()
-            bastion['defenders'] = new_defenders # Update state
             
         st.success(f"Maintain order issued. Rolled {roll}: {event_name}!")
-        add_log_entry(st.session_state.data['campaign']['current_day'], message)
-        time.sleep(2)
+        add_log_entry(data['campaign']['current_day'], message)
+        time.sleep(1)
         st.rerun()
 
     for facility in bastion['facilities']:
@@ -316,7 +308,7 @@ def proprietor_view():
                 if facility['status'] != 'Idle':
                     if cols[1].button("Cancel Order", key=f"cancel_{facility['id']}"):
                         supabase.table("facilities").update({"status": "Idle", "order_progress": 0, "order_duration": 0}).eq("id", facility['id']).execute()
-                        add_log_entry(st.session_state.data['campaign']['current_day'], f"{char_name} cancelled the order '{facility['status']}' at the {facility['name']}.")
+                        add_log_entry(data['campaign']['current_day'], f"{char_name} cancelled the order '{facility['status']}' at the {facility['name']}.")
                         st.rerun()
                 else:
                     if cols[2].button("Issue Order", key=f"order_{facility['id']}"):
@@ -338,23 +330,18 @@ def proprietor_view():
                                 "order_progress": 0, 
                                 "order_duration": order_details['duration']
                             }).eq("id", facility['id']).execute()
-                            add_log_entry(st.session_state.data['campaign']['current_day'], f"{char_name}'s {facility['name']} began the order: {order_choice}.")
+                            add_log_entry(data['campaign']['current_day'], f"{char_name}'s {facility['name']} began the order: {order_choice}.")
                             del st.session_state.selected_facility
                             st.rerun()
 
     st.markdown("---")
     st.subheader("Acquire New Facilities")
-    # (Acquisition logic remains the same, but would need Supabase INSERTs)
+    # (Acquisition logic would need Supabase INSERTs and is omitted for brevity)
 
 # --- UI: COMMUNAL VIEW ---
-def communal_view():
+def communal_view(data):
     st.title("🏰 The Bastion's Hearth")
     st.markdown("---")
-    if not st.session_state.data:
-        st.warning("Could not load campaign data.")
-        return
-        
-    data = st.session_state.data
     total_defenders = sum(b['defenders'] for b in data['bastions'])
     col1, col2, col3 = st.columns(3)
     col1.metric(label="Campaign Name", value=data['campaign']['campaign_name'])
@@ -367,12 +354,12 @@ def communal_view():
             st.markdown(f"> {log_entry}")
 
 # --- UI: DM VIEW ---
-def dm_view():
+def dm_view(data):
     st.title("👑 The Architect's Sanctum")
     st.markdown("---")
     st.header("Campaign Time Management")
     
-    campaign = st.session_state.data['campaign']
+    campaign = data['campaign']
     current_day = campaign['current_day']
     st.metric("Current In-Game Day", current_day)
     
@@ -382,21 +369,17 @@ def dm_view():
         if submitted:
             new_day = current_day + days_to_advance
             
-            # Update all active orders
-            for bastion in st.session_state.data['bastions']:
+            for bastion in data['bastions']:
                 for facility in bastion['facilities']:
                     if facility.get('type') == 'Special' and facility.get('status') != 'Idle':
                         new_progress = facility['order_progress'] + days_to_advance
                         if new_progress >= facility['order_duration']:
-                            # Order complete
                             supabase.table("facilities").update({"status": "Idle", "order_progress": 0, "order_duration": 0}).eq("id", facility['id']).execute()
-                            owner = next(c for c in st.session_state.data['characters'] if c['id'] == bastion['character_id'])
+                            owner = next(c for c in data['characters'] if c['id'] == bastion['character_id'])
                             add_log_entry(new_day, f"{owner['name']}'s {facility['name']} has completed the order: {facility['status']}.")
                         else:
-                            # Order in progress
                             supabase.table("facilities").update({"order_progress": new_progress}).eq("id", facility['id']).execute()
 
-            # Update campaign day
             supabase.table("campaigns").update({"current_day": new_day}).eq("id", campaign['id']).execute()
             
             st.success(f"Time advanced by {days_to_advance} days. New day is {new_day}.")
@@ -404,30 +387,46 @@ def dm_view():
             st.rerun()
 
 # --- MAIN APP ROUTER ---
-if not supabase or not st.session_state.data:
-    st.error("Application could not initialize. Please check Supabase connection and configuration.")
-else:
+def main():
+    """Main function to run the Streamlit app."""
+    if 'data' not in st.session_state:
+        st.session_state.data = None
+    
+    if st.session_state.data is None:
+        with st.spinner("Summoning Mortimer from the archives..."):
+            st.session_state.data = load_data()
+
+    if not supabase or not st.session_state.data:
+        st.error("Application could not initialize. Please check Supabase connection and ensure your campaign data is set up.")
+        return
+
+    data = st.session_state.data
+    
     st.sidebar.title("Navigation")
     st.sidebar.markdown("---")
     
-    player_list = [char['name'] for char in st.session_state.data['characters']]
-    if st.session_state.current_player not in player_list:
+    player_list = [char['name'] for char in data['characters']]
+    if 'current_player' not in st.session_state or st.session_state.current_player not in player_list:
         st.session_state.current_player = player_list[0] if player_list else None
     
-    selected_player = st.sidebar.selectbox("Select Your Character:", options=player_list, index=player_list.index(st.session_state.current_player))
-    st.session_state.current_player = selected_player
+    if st.session_state.current_player:
+        selected_player = st.sidebar.selectbox("Select Your Character:", options=player_list, index=player_list.index(st.session_state.current_player))
+        st.session_state.current_player = selected_player
 
-    if selected_player == "DM":
-        view = "DM View"
-    else:
-        view = st.sidebar.radio("Select View", ("Communal View", "Proprietor's View"), label_visibility="hidden")
+        if selected_player == "DM":
+            view = "DM View"
+        else:
+            view = st.sidebar.radio("Select View", ("Communal View", "Proprietor's View"), label_visibility="hidden")
 
-    st.sidebar.markdown("---")
-    st.sidebar.info("This app helps manage D&D 5e Bastions.")
+        st.sidebar.markdown("---")
+        st.sidebar.info("This app helps manage D&D 5e Bastions.")
 
-    if view == "Communal View":
-        communal_view()
-    elif view == "Proprietor's View":
-        proprietor_view()
-    elif view == "DM View":
-        dm_view()
+        if view == "Communal View":
+            communal_view(data)
+        elif view == "Proprietor's View":
+            proprietor_view(data)
+        elif view == "DM View":
+            dm_view(data)
+
+if __name__ == "__main__":
+    main()
