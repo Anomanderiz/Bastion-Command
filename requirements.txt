@@ -1,0 +1,7 @@
+# -------------------------------------------------
+# Python Dependencies for Bastion Manager Streamlit App
+# -------------------------------------------------
+streamlit
+supabase
+pandas
+requests
