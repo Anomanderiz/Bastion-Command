@@ -51,7 +51,7 @@ def load_css():
         }
 
         /* Custom container style for a "scroll" or "tablet" effect */
-        .st-emotion-cache-1r6slb0 {
+        .st-emotion-cache-1r6slb0, .bastion-card {
             border: 2px solid #5a4d39;
             background-color: #3c352a;
             border-radius: 10px;
@@ -96,6 +96,17 @@ def load_css():
         .st-emotion-cache-1g8m52x p {
             font-family: 'IM Fell English SC', serif;
         }
+        
+        /* Mortimer's Log Styling */
+        .log-entry {
+            border-left: 3px solid #5a4d39; /* Default border color */
+            padding-left: 10px;
+            margin-bottom: 8px;
+        }
+        .log-entry-negative { border-left-color: #FF5733; }
+        .log-entry-positive { border-left-color: #D4AF37; }
+        .log-entry-progress { border-left-color: #F7DC6F; }
+        .log-entry-complete { border-left-color: #82E0AA; }
 
     </style>
     """, unsafe_allow_html=True)
@@ -205,7 +216,7 @@ def load_data(campaign_id=1):
         if bastion_ids:
             facilities = supabase.table("facilities").select("*").in_("bastion_id", bastion_ids).execute().data
             
-        log = supabase.table("bastion_log").select("*").eq("campaign_id", campaign_id).order("created_at", desc=True).limit(20).execute().data
+        log = supabase.table("bastion_log").select("*").eq("campaign_id", campaign_id).order("created_at", desc=True).limit(50).execute().data
 
         bastions = []
         for b_raw in bastions_raw:
@@ -267,6 +278,19 @@ def refresh_data():
     st.cache_data.clear()
     st.rerun()
 
+def get_log_style(log_entry):
+    """Determines the CSS class for a log entry based on its content."""
+    entry_lower = log_entry.lower()
+    if any(keyword in entry_lower for keyword in ["attack", "lost", "criminal"]):
+        return "log-entry-negative"
+    if any(keyword in entry_lower for keyword in ["treasure", "acquired", "magical discovery"]):
+        return "log-entry-positive"
+    if any(keyword in entry_lower for keyword in ["completed", "enlarged"]):
+        return "log-entry-complete"
+    if any(keyword in entry_lower for keyword in ["began", "construction", "started"]):
+        return "log-entry-progress"
+    return "log-entry" # Default style
+
 # --- UI: PROPRIETOR VIEW ---
 def proprietor_view(data):
     st.title("✒️ Proprietor's Ledger")
@@ -314,6 +338,10 @@ def proprietor_view(data):
         st.rerun() # Rerun with updated session state
 
     for fac_index, facility in enumerate(sorted(bastion['facilities'], key=lambda f: (f['type'], f['name']))):
+        # Find the original index to update the session state correctly
+        original_fac_index = next((i for i, f in enumerate(st.session_state.data['bastions'][bastion_index]['facilities']) if f['id'] == facility['id']), None)
+        if original_fac_index is None: continue
+
         with st.container():
             cols = st.columns([2, 2, 1])
             is_busy = facility.get('status', 'Idle') != 'Idle'
@@ -335,8 +363,7 @@ def proprietor_view(data):
                         update_payload = {"status": "Idle", "order_progress": 0, "order_duration": 0}
                         supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
                         add_log_entry(data['campaign']['current_day'], f"{char_name} cancelled the order '{facility['status']}' at the {facility['name']}.")
-                        # Update session state directly
-                        st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
+                        st.session_state.data['bastions'][bastion_index]['facilities'][original_fac_index].update(update_payload)
                         st.rerun()
                 else: # Facility is Idle
                     if facility['type'] == 'Basic':
@@ -363,12 +390,11 @@ def proprietor_view(data):
                     order_details = rules["orders"][order_choice]
                     st.caption(f"Duration: {order_details['duration']} days | Cost: {order_details['cost_gp']} GP")
                     
-                    submitted = st.form_submit_button("Confirm Order")
-                    if submitted:
+                    if st.form_submit_button("Confirm Order"):
                         update_payload = {"status": order_choice, "order_progress": 0, "order_duration": order_details['duration']}
                         supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
                         add_log_entry(data['campaign']['current_day'], f"{char_name}'s {facility['name']} began the order: {order_choice}.")
-                        st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
+                        st.session_state.data['bastions'][bastion_index]['facilities'][original_fac_index].update(update_payload)
                         del st.session_state.selected_facility_order
                         st.rerun()
                             
@@ -376,72 +402,79 @@ def proprietor_view(data):
                 with st.form(key=f"form_upgrade_{facility['id']}"):
                     current_size = facility.get('size')
                     target_size = {"Cramped": "Roomy", "Roomy": "Vast"}[current_size]
-                    upgrade_key = f"{current_size} to {target_size}"
-                    cost_info = FACILITY_RULES[facility['name']]['enlarge_cost'][upgrade_key]
+                    cost_info = FACILITY_RULES[facility['name']]['enlarge_cost'][f"{current_size} to {target_size}"]
                     
                     st.subheader(f"Enlarge {facility['name']} to {target_size}")
                     st.caption(f"Duration: {cost_info['time_days']} days | Cost: {cost_info['cost_gp']} GP")
                     
-                    submitted = st.form_submit_button("Confirm Enlargement")
-                    if submitted:
+                    if st.form_submit_button("Confirm Enlargement"):
                         update_payload = {"status": f"Enlarging to {target_size}", "order_progress": 0, "order_duration": cost_info['time_days']}
                         supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
                         add_log_entry(data['campaign']['current_day'], f"{char_name} has begun enlarging their {facility['name']} to {target_size}.")
-                        st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
+                        st.session_state.data['bastions'][bastion_index]['facilities'][original_fac_index].update(update_payload)
                         del st.session_state.selected_facility_upgrade
                         st.rerun()
 
     st.markdown("---")
-    st.subheader("Acquire New Facilities")
-
-    # Special Facilities
-    num_special_facilities = len([f for f in bastion['facilities'] if f['type'] == 'Special'])
-    max_special_facilities = 0
-    for level_req in sorted(SPECIAL_FACILITY_ACQUISITION.keys()):
-        if character['level'] >= level_req:
-            max_special_facilities = SPECIAL_FACILITY_ACQUISITION[level_req]
-
-    st.markdown(f"**Special Facilities:** {num_special_facilities} / {max_special_facilities} owned.")
-    if num_special_facilities < max_special_facilities:
-        owned_names = [f['name'] for f in bastion['facilities']]
-        available_special = [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Special' and name not in owned_names and character['level'] >= rules['level']]
-        
-        if available_special:
-            new_special = st.selectbox("Choose a new Special Facility to acquire:", available_special)
-            if st.button(f"Acquire {new_special} (Free with level up)"):
-                facility_size = FACILITY_RULES.get(new_special, {}).get('size', 'Roomy')
-                insert_payload = {
-                    "bastion_id": bastion['id'], "name": new_special, "type": "Special",
-                    "status": "Idle", "size": facility_size, "order_progress": 0, "order_duration": 0
-                }
-                response = supabase.table("facilities").insert(insert_payload).execute()
-                new_facility_record = response.data[0]
-                
-                add_log_entry(data['campaign']['current_day'], f"{char_name} has acquired a new facility: {new_special}!")
-                st.success(f"{new_special} has been added to your bastion!")
-                st.session_state.data['bastions'][bastion_index]['facilities'].append(new_facility_record)
-                time.sleep(1)
-                st.rerun()
-
-    # Basic Facilities
-    st.markdown("**Basic Facilities:**")
-    new_basic_name = st.selectbox("Choose a Basic Facility to build:", [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Basic'])
-    new_basic_size = st.selectbox("Choose size:", ["Cramped", "Roomy", "Vast"])
-    cost_info = FACILITY_RULES[new_basic_name]['add_cost'][new_basic_size]
     
-    if st.button(f"Build {new_basic_name} ({new_basic_size}) - Cost: {cost_info['cost_gp']} GP, Time: {cost_info['time_days']} days"):
-        insert_payload = {
-            "bastion_id": bastion['id'], "name": new_basic_name, "type": "Basic", "size": new_basic_size,
-            "status": f"Under Construction", "order_progress": 0, "order_duration": cost_info['time_days']
-        }
-        response = supabase.table("facilities").insert(insert_payload).execute()
-        new_facility_record = response.data[0]
+    # --- ENHANCEMENT: Tabbed interface for development ---
+    dev_tab1, dev_tab2 = st.tabs(["Acquire Facilities", "Personnel"])
 
-        add_log_entry(data['campaign']['current_day'], f"{char_name} has begun construction on a new {new_basic_name} ({new_basic_size}).")
-        st.success(f"Construction order for {new_basic_name} has been issued!")
-        st.session_state.data['bastions'][bastion_index]['facilities'].append(new_facility_record)
-        time.sleep(1)
-        st.rerun()
+    with dev_tab1:
+        st.subheader("Construction & Acquisition")
+        # Special Facilities
+        num_special_facilities = len([f for f in bastion['facilities'] if f['type'] == 'Special'])
+        max_special_facilities = 0
+        for level_req in sorted(SPECIAL_FACILITY_ACQUISITION.keys()):
+            if character['level'] >= level_req:
+                max_special_facilities = SPECIAL_FACILITY_ACQUISITION[level_req]
+
+        st.markdown(f"**Special Facilities:** {num_special_facilities} / {max_special_facilities} owned.")
+        if num_special_facilities < max_special_facilities:
+            owned_names = [f['name'] for f in bastion['facilities']]
+            available_special = [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Special' and name not in owned_names and character['level'] >= rules['level']]
+            
+            if available_special:
+                new_special = st.selectbox("Choose a new Special Facility to acquire:", available_special, key="new_special_facility")
+                if st.button(f"Acquire {new_special} (Free with level up)"):
+                    facility_size = FACILITY_RULES.get(new_special, {}).get('size', 'Roomy')
+                    insert_payload = {
+                        "bastion_id": bastion['id'], "name": new_special, "type": "Special",
+                        "status": "Idle", "size": facility_size, "order_progress": 0, "order_duration": 0
+                    }
+                    response = supabase.table("facilities").insert(insert_payload).execute()
+                    new_facility_record = response.data[0]
+                    
+                    add_log_entry(data['campaign']['current_day'], f"{char_name} has acquired a new facility: {new_special}!")
+                    st.success(f"{new_special} has been added to your bastion!")
+                    st.session_state.data['bastions'][bastion_index]['facilities'].append(new_facility_record)
+                    time.sleep(1)
+                    st.rerun()
+
+        # Basic Facilities
+        st.markdown("**Basic Facilities:**")
+        new_basic_name = st.selectbox("Choose a Basic Facility to build:", [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Basic'], key="new_basic_facility")
+        new_basic_size = st.selectbox("Choose size:", ["Cramped", "Roomy", "Vast"], key="new_basic_size")
+        cost_info = FACILITY_RULES[new_basic_name]['add_cost'][new_basic_size]
+        
+        if st.button(f"Build {new_basic_name} ({new_basic_size})"):
+            insert_payload = {
+                "bastion_id": bastion['id'], "name": new_basic_name, "type": "Basic", "size": new_basic_size,
+                "status": f"Under Construction", "order_progress": 0, "order_duration": cost_info['time_days']
+            }
+            response = supabase.table("facilities").insert(insert_payload).execute()
+            new_facility_record = response.data[0]
+
+            add_log_entry(data['campaign']['current_day'], f"{char_name} has begun construction on a new {new_basic_name} ({new_basic_size}).")
+            st.success(f"Construction order for {new_basic_name} has been issued!")
+            st.session_state.data['bastions'][bastion_index]['facilities'].append(new_facility_record)
+            time.sleep(1)
+            st.rerun()
+
+    with dev_tab2:
+        st.subheader("Defenders & Hirelings")
+        st.markdown(f"You currently have **{bastion['defenders']}** Bastion Defenders.")
+        st.markdown("Recruit more defenders by issuing orders at a Barrack.")
 
 # --- UI: COMMUNAL VIEW ---
 def communal_view(data):
@@ -452,26 +485,66 @@ def communal_view(data):
     total_facilities = sum(len(b['facilities']) for b in data['bastions'])
     active_facilities = sum(1 for b in data['bastions'] for f in b['facilities'] if f.get('status', 'Idle') != 'Idle')
     productivity = (active_facilities / total_facilities * 100) if total_facilities > 0 else 0
+    threat_level = data['campaign'].get('threat_level', 'Peaceful')
 
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric(label="Campaign Name", value=data['campaign']['campaign_name'])
     col2.metric(label="Current In-Game Day", value=data['campaign']['current_day'])
     col3.metric(label="Total Bastion Defenders", value=total_defenders)
     col4.metric(label="Bastion Productivity", value=f"{productivity:.0f}%")
+    col5.metric(label="Threat Level", value=threat_level)
 
     st.markdown("---")
-    st.subheader("Recent Bastion Activity")
+    
+    st.subheader("Party Bastion Roster")
+    num_bastions = len(data['bastions'])
+    if num_bastions == 0:
+        st.info("No bastions established yet.")
+    else:
+        cols = st.columns(min(num_bastions, 4)) 
+        for i, bastion in enumerate(data['bastions']):
+            with cols[i % min(num_bastions, 4)]:
+                with st.container():
+                    owner = next((c for c in data['characters'] if c['id'] == bastion['character_id']), None)
+                    st.markdown(f"""
+                    <div class="bastion-card">
+                        <h4>{bastion['name']}</h4>
+                        <p><b>Proprietor:</b> {owner['name'] if owner else 'Unknown'}</p>
+                        <p><b>Defenders:</b> {bastion['defenders']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.subheader("Mortimer's Log")
     log_container = st.container(height=300)
     with log_container:
+        if not data['log']:
+            st.markdown("<p class='log-entry'>The log is presently empty, sir.</p>", unsafe_allow_html=True)
         for log_entry in data['log']:
-            st.markdown(f"> {log_entry}")
+            style_class = get_log_style(log_entry)
+            st.markdown(f"<div class='log-entry {style_class}'>{log_entry}</div>", unsafe_allow_html=True)
 
 # --- UI: DM VIEW ---
 def dm_view(data):
     st.title("👑 The Architect's Sanctum")
     st.markdown("---")
-    st.header("Campaign Time Management")
     
+    st.header("Master Control Panel")
+    with st.expander("View All Bastion Details"):
+        for bastion in data['bastions']:
+            owner = next((c for c in data['characters'] if c['id'] == bastion['character_id']), None)
+            st.subheader(f"{bastion['name']} (Proprietor: {owner['name'] if owner else 'N/A'})")
+            st.text(f"Defenders: {bastion['defenders']}")
+            
+            active_orders = [f for f in bastion['facilities'] if f.get('status', 'Idle') != 'Idle']
+            if not active_orders:
+                st.text("All facilities are idle.")
+            else:
+                for facility in active_orders:
+                    st.text(f"- {facility['name']}: {facility['status']} ({facility['order_progress']}/{facility['order_duration']} days)")
+            st.markdown("---")
+
+    st.header("Campaign Time Management")
     campaign = data['campaign']
     current_day = campaign['current_day']
     st.metric("Current In-Game Day", current_day)
@@ -482,24 +555,17 @@ def dm_view(data):
         
         if submitted:
             with st.spinner(f"Advancing time by {days_to_advance} days..."):
-                # Iterate directly over the session state data to modify it in place
                 for day_offset in range(1, days_to_advance + 1):
                     day_in_progress = current_day + day_offset
-                    
                     for bastion_index, bastion in enumerate(data['bastions']):
                         for fac_index, facility in enumerate(bastion['facilities']):
-                            if facility.get('status', 'Idle') == 'Idle':
-                                continue
-
+                            if facility.get('status', 'Idle') == 'Idle': continue
                             new_progress = facility['order_progress'] + 1
-                            
                             if new_progress >= facility['order_duration']:
                                 completed_order = facility['status']
                                 owner = next(c for c in data['characters'] if c['id'] == bastion['character_id'])
-                                
                                 update_payload = {"status": "Idle", "order_progress": 0, "order_duration": 0}
                                 log_message = ""
-
                                 if completed_order.startswith("Enlarging to "):
                                     target_size = completed_order.split(" ")[-1]
                                     update_payload['size'] = target_size
@@ -508,26 +574,44 @@ def dm_view(data):
                                     log_message = f"{owner['name']}'s new {facility['name']} has been completed."
                                 else:
                                     log_message = f"{owner['name']}'s {facility['name']} has completed the order: {completed_order}."
-                                
                                 supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
                                 add_log_entry(day_in_progress, log_message)
-                                # Update session state directly
                                 st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
                             else:
                                 supabase.table("facilities").update({"order_progress": new_progress}).eq("id", facility['id']).execute()
-                                # Update session state directly
                                 st.session_state.data['bastions'][bastion_index]['facilities'][fac_index]['order_progress'] = new_progress
-                
                 new_day = current_day + days_to_advance
                 supabase.table("campaigns").update({"current_day": new_day}).eq("id", campaign['id']).execute()
-                # Update session state for the day counter
                 st.session_state.data['campaign']['current_day'] = new_day
-            
             st.success(f"Time advanced by {days_to_advance} days. New day is {new_day}.")
             time.sleep(1) 
-            # Clear cache to ensure the *next* full page load is fresh, but rerun immediately with updated session state
             st.cache_data.clear()
             st.rerun()
+
+    st.header("Narrative Tools")
+    
+    st.subheader("Set Campaign Threat Level")
+    threat_levels = ["Peaceful", "Vigilant", "Tense", "Under Siege"]
+    current_threat = campaign.get('threat_level', 'Peaceful')
+    selected_threat = st.selectbox("Select Threat Level:", threat_levels, index=threat_levels.index(current_threat))
+    if st.button("Update Threat Level"):
+        supabase.table("campaigns").update({"threat_level": selected_threat}).eq("id", campaign['id']).execute()
+        st.session_state.data['campaign']['threat_level'] = selected_threat
+        st.success(f"Threat level updated to {selected_threat}.")
+        time.sleep(1)
+        st.rerun()
+
+    st.subheader("Inject Bastion Event")
+    bastion_names = {b['id']: b['name'] for b in data['bastions']}
+    target_bastion_id = st.selectbox("Target Bastion:", options=list(bastion_names.keys()), format_func=lambda x: bastion_names[x])
+    event_to_inject = st.selectbox("Event to Trigger:", options=[name for r, name in BASTION_EVENTS.items()])
+    if st.button("Trigger Event"):
+        message = f"A special event occurred at {bastion_names[target_bastion_id]}: **{event_to_inject}**."
+        add_log_entry(current_day, message)
+        st.success(f"Injected '{event_to_inject}' event for {bastion_names[target_bastion_id]}.")
+        time.sleep(1)
+        st.rerun()
+
 
 # --- MAIN APP ROUTER ---
 def main():
