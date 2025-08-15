@@ -416,7 +416,7 @@ def dm_view():
             st.session_state.data['campaign']['current_day'] = new_day
             for bastion in st.session_state.data['bastions']:
                 for facility in bastion['facilities']:
-                    if facility['status'] != 'Idle':
+                    if facility.get('type') == 'Special' and facility.get('status') != 'Idle':
                         facility['order_progress'] += days_to_advance
                         if facility['order_progress'] >= facility['order_duration']:
                             completed_order = facility['status']
