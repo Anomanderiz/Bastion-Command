@@ -248,6 +248,7 @@ def send_to_discord(message):
 def add_log_entry(day, message, campaign_id=1):
     """Adds an entry to the in-app log, Supabase, and sends it to Discord."""
     full_log_message = f"Day {day}: {message}"
+    # Immediately update the log in the session state for snappy UI
     if 'data' in st.session_state and st.session_state.data:
         st.session_state.data['log'].insert(0, full_log_message)
     send_to_discord(full_log_message)
@@ -262,7 +263,7 @@ def add_log_entry(day, message, campaign_id=1):
             st.warning(f"Could not save log to database: {e}")
 
 def refresh_data():
-    """Clears the data cache and reruns the app to reflect changes."""
+    """Clears the data cache and reruns the app to force a fresh load from the DB."""
     st.cache_data.clear()
     st.rerun()
 
@@ -281,7 +282,8 @@ def proprietor_view(data):
         st.warning(f"As a level {character['level']} adventurer, you have not yet earned the right to a Bastion. Return when you have attained the 5th level of experience.")
         return
 
-    bastion = next((b for b in data['bastions'] if b['character_id'] == character['id']), None)
+    # Find the specific bastion object from the session state to modify it directly
+    bastion_index, bastion = next(((i, b) for i, b in enumerate(data['bastions']) if b['character_id'] == character['id']), (None, None))
     if not bastion:
         st.error(f"No bastion found for {char_name}. Please ensure one is created in the Supabase table.")
         return
@@ -302,14 +304,16 @@ def proprietor_view(data):
             losses = dice_rolls.count(1)
             new_defenders = max(0, bastion['defenders'] - losses)
             message += f" The bastion was attacked! It lost {losses} defenders. (Rolls: {dice_rolls})"
+            # Update DB and session state
             supabase.table("bastions").update({"defenders": new_defenders}).eq("id", bastion['id']).execute()
+            st.session_state.data['bastions'][bastion_index]['defenders'] = new_defenders
             
         st.success(f"Maintain order issued. Rolled {roll}: {event_name}!")
         add_log_entry(data['campaign']['current_day'], message)
         time.sleep(1)
-        refresh_data()
+        st.rerun() # Rerun with updated session state
 
-    for facility in sorted(bastion['facilities'], key=lambda f: (f['type'], f['name'])):
+    for fac_index, facility in enumerate(sorted(bastion['facilities'], key=lambda f: (f['type'], f['name']))):
         with st.container():
             cols = st.columns([2, 2, 1])
             is_busy = facility.get('status', 'Idle') != 'Idle'
@@ -328,57 +332,46 @@ def proprietor_view(data):
             with cols[1]:
                 if is_busy:
                     if st.button("Cancel Order", key=f"cancel_{facility['id']}"):
-                        supabase.table("facilities").update({"status": "Idle", "order_progress": 0, "order_duration": 0}).eq("id", facility['id']).execute()
+                        update_payload = {"status": "Idle", "order_progress": 0, "order_duration": 0}
+                        supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
                         add_log_entry(data['campaign']['current_day'], f"{char_name} cancelled the order '{facility['status']}' at the {facility['name']}.")
-                        refresh_data()
+                        # Update session state directly
+                        st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
+                        st.rerun()
                 else: # Facility is Idle
                     if facility['type'] == 'Basic':
                         current_size = facility.get('size')
                         if current_size in ["Cramped", "Roomy"]:
                             upgrade_map = {"Cramped": "Roomy", "Roomy": "Vast"}
                             target_size = upgrade_map[current_size]
-                            upgrade_key = f"{current_size} to {target_size}"
-                            cost_info = FACILITY_RULES[facility['name']]['enlarge_cost'][upgrade_key]
                             if st.button(f"Enlarge to {target_size}", key=f"enlarge_{facility['id']}"):
                                 st.session_state.selected_facility_upgrade = facility['id']
-                                # Rerun to open the modal immediately
                                 st.rerun()
 
             with cols[2]:
                 if not is_busy and facility['type'] == 'Special':
                     if st.button("Issue Order", key=f"order_{facility['id']}"):
                         st.session_state.selected_facility_order = facility['id']
-                        # Rerun to open the modal immediately
                         st.rerun()
 
             # --- Modals for Orders and Upgrades ---
-            # Order Modal
             if 'selected_facility_order' in st.session_state and st.session_state.selected_facility_order == facility['id']:
                 with st.form(key=f"form_order_{facility['id']}"):
                     st.subheader(f"Issue Order: {facility['name']}")
                     rules = FACILITY_RULES.get(facility['name'], {})
                     order_choice = st.selectbox("Choose an order:", list(rules.get("orders", {}).keys()))
-                    if order_choice:
-                        order_details = rules["orders"][order_choice]
-                        st.caption(f"Duration: {order_details['duration']} days | Cost: {order_details['cost_gp']} GP")
-                        
-                        col1, col2 = st.columns(2)
-                        with col1:
-                            if st.form_submit_button("Confirm Order"):
-                                supabase.table("facilities").update({
-                                    "status": order_choice, 
-                                    "order_progress": 0, 
-                                    "order_duration": order_details['duration']
-                                }).eq("id", facility['id']).execute()
-                                add_log_entry(data['campaign']['current_day'], f"{char_name}'s {facility['name']} began the order: {order_choice}.")
-                                del st.session_state.selected_facility_order
-                                refresh_data()
-                        with col2:
-                            if st.form_submit_button("Cancel", type="secondary"):
-                                del st.session_state.selected_facility_order
-                                st.rerun()
+                    order_details = rules["orders"][order_choice]
+                    st.caption(f"Duration: {order_details['duration']} days | Cost: {order_details['cost_gp']} GP")
+                    
+                    submitted = st.form_submit_button("Confirm Order")
+                    if submitted:
+                        update_payload = {"status": order_choice, "order_progress": 0, "order_duration": order_details['duration']}
+                        supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
+                        add_log_entry(data['campaign']['current_day'], f"{char_name}'s {facility['name']} began the order: {order_choice}.")
+                        st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
+                        del st.session_state.selected_facility_order
+                        st.rerun()
                             
-            # Upgrade Modal
             if 'selected_facility_upgrade' in st.session_state and st.session_state.selected_facility_upgrade == facility['id']:
                 with st.form(key=f"form_upgrade_{facility['id']}"):
                     current_size = facility.get('size')
@@ -388,22 +381,15 @@ def proprietor_view(data):
                     
                     st.subheader(f"Enlarge {facility['name']} to {target_size}")
                     st.caption(f"Duration: {cost_info['time_days']} days | Cost: {cost_info['cost_gp']} GP")
-
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        if st.form_submit_button("Confirm Enlargement"):
-                            supabase.table("facilities").update({
-                                "status": f"Enlarging to {target_size}",
-                                "order_progress": 0,
-                                "order_duration": cost_info['time_days']
-                            }).eq("id", facility['id']).execute()
-                            add_log_entry(data['campaign']['current_day'], f"{char_name} has begun enlarging their {facility['name']} to {target_size}.")
-                            del st.session_state.selected_facility_upgrade
-                            refresh_data()
-                    with col2:
-                        if st.form_submit_button("Cancel", type="secondary"):
-                            del st.session_state.selected_facility_upgrade
-                            st.rerun()
+                    
+                    submitted = st.form_submit_button("Confirm Enlargement")
+                    if submitted:
+                        update_payload = {"status": f"Enlarging to {target_size}", "order_progress": 0, "order_duration": cost_info['time_days']}
+                        supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
+                        add_log_entry(data['campaign']['current_day'], f"{char_name} has begun enlarging their {facility['name']} to {target_size}.")
+                        st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
+                        del st.session_state.selected_facility_upgrade
+                        st.rerun()
 
     st.markdown("---")
     st.subheader("Acquire New Facilities")
@@ -423,51 +409,39 @@ def proprietor_view(data):
         if available_special:
             new_special = st.selectbox("Choose a new Special Facility to acquire:", available_special)
             if st.button(f"Acquire {new_special} (Free with level up)"):
-                # --- FIX: Ensure new special facilities have a size ---
-                facility_size = FACILITY_RULES.get(new_special, {}).get('size', 'Roomy') # Default to Roomy if not specified
-                supabase.table("facilities").insert({
-                    "bastion_id": bastion['id'],
-                    "name": new_special,
-                    "type": "Special",
-                    "status": "Idle",
-                    "size": facility_size,
-                    "order_progress": 0,
-                    "order_duration": 0
-                }).execute()
+                facility_size = FACILITY_RULES.get(new_special, {}).get('size', 'Roomy')
+                insert_payload = {
+                    "bastion_id": bastion['id'], "name": new_special, "type": "Special",
+                    "status": "Idle", "size": facility_size, "order_progress": 0, "order_duration": 0
+                }
+                response = supabase.table("facilities").insert(insert_payload).execute()
+                new_facility_record = response.data[0]
+                
                 add_log_entry(data['campaign']['current_day'], f"{char_name} has acquired a new facility: {new_special}!")
                 st.success(f"{new_special} has been added to your bastion!")
+                st.session_state.data['bastions'][bastion_index]['facilities'].append(new_facility_record)
                 time.sleep(1)
-                refresh_data()
-        else:
-            st.info("No new Special Facilities available at your current level.")
-    else:
-        st.info("You have reached your maximum number of Special Facilities for your level.")
+                st.rerun()
 
     # Basic Facilities
     st.markdown("**Basic Facilities:**")
-    available_basic = [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Basic']
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        new_basic_name = st.selectbox("Choose a Basic Facility to build:", available_basic)
-    with col2:
-        new_basic_size = st.selectbox("Choose size:", ["Cramped", "Roomy", "Vast"])
-
+    new_basic_name = st.selectbox("Choose a Basic Facility to build:", [name for name, rules in FACILITY_RULES.items() if rules['type'] == 'Basic'])
+    new_basic_size = st.selectbox("Choose size:", ["Cramped", "Roomy", "Vast"])
     cost_info = FACILITY_RULES[new_basic_name]['add_cost'][new_basic_size]
+    
     if st.button(f"Build {new_basic_name} ({new_basic_size}) - Cost: {cost_info['cost_gp']} GP, Time: {cost_info['time_days']} days"):
-        supabase.table("facilities").insert({
-            "bastion_id": bastion['id'],
-            "name": new_basic_name,
-            "type": "Basic",
-            "size": new_basic_size,
-            "status": f"Under Construction",
-            "order_progress": 0,
-            "order_duration": cost_info['time_days']
-        }).execute()
+        insert_payload = {
+            "bastion_id": bastion['id'], "name": new_basic_name, "type": "Basic", "size": new_basic_size,
+            "status": f"Under Construction", "order_progress": 0, "order_duration": cost_info['time_days']
+        }
+        response = supabase.table("facilities").insert(insert_payload).execute()
+        new_facility_record = response.data[0]
+
         add_log_entry(data['campaign']['current_day'], f"{char_name} has begun construction on a new {new_basic_name} ({new_basic_size}).")
         st.success(f"Construction order for {new_basic_name} has been issued!")
+        st.session_state.data['bastions'][bastion_index]['facilities'].append(new_facility_record)
         time.sleep(1)
-        refresh_data()
+        st.rerun()
 
 # --- UI: COMMUNAL VIEW ---
 def communal_view(data):
@@ -475,7 +449,6 @@ def communal_view(data):
     st.markdown("---")
     
     total_defenders = sum(b['defenders'] for b in data['bastions'])
-    
     total_facilities = sum(len(b['facilities']) for b in data['bastions'])
     active_facilities = sum(1 for b in data['bastions'] for f in b['facilities'] if f.get('status', 'Idle') != 'Idle')
     productivity = (active_facilities / total_facilities * 100) if total_facilities > 0 else 0
@@ -509,74 +482,57 @@ def dm_view(data):
         
         if submitted:
             with st.spinner(f"Advancing time by {days_to_advance} days..."):
-                # Fetch the absolute latest state before processing
-                fresh_data = load_data(campaign['id'])
-                all_facilities = [
-                    (bastion, facility) 
-                    for bastion in fresh_data['bastions'] 
-                    for facility in bastion['facilities'] 
-                    if facility.get('status', 'Idle') != 'Idle'
-                ]
-
-                # Process day by day for accurate logging.
+                # Iterate directly over the session state data to modify it in place
                 for day_offset in range(1, days_to_advance + 1):
                     day_in_progress = current_day + day_offset
                     
-                    daily_updates = []
+                    for bastion_index, bastion in enumerate(data['bastions']):
+                        for fac_index, facility in enumerate(bastion['facilities']):
+                            if facility.get('status', 'Idle') == 'Idle':
+                                continue
 
-                    for bastion, facility in all_facilities:
-                        if facility.get('status', 'Idle') == 'Idle':
-                            continue
+                            new_progress = facility['order_progress'] + 1
+                            
+                            if new_progress >= facility['order_duration']:
+                                completed_order = facility['status']
+                                owner = next(c for c in data['characters'] if c['id'] == bastion['character_id'])
+                                
+                                update_payload = {"status": "Idle", "order_progress": 0, "order_duration": 0}
+                                log_message = ""
 
-                        new_progress = facility['order_progress'] + 1
-                        
-                        if new_progress >= facility['order_duration']:
-                            completed_order = facility['status']
-                            owner = next(c for c in fresh_data['characters'] if c['id'] == bastion['character_id'])
-                            
-                            update_payload = {"status": "Idle", "order_progress": 0, "order_duration": 0}
-                            
-                            log_message = ""
-                            if completed_order.startswith("Enlarging to "):
-                                target_size = completed_order.split(" ")[-1]
-                                update_payload['size'] = target_size
-                                log_message = f"{owner['name']}'s {facility['name']} has been enlarged to {target_size}."
-                            elif completed_order == "Under Construction":
-                                log_message = f"{owner['name']}'s new {facility['name']} has been completed."
+                                if completed_order.startswith("Enlarging to "):
+                                    target_size = completed_order.split(" ")[-1]
+                                    update_payload['size'] = target_size
+                                    log_message = f"{owner['name']}'s {facility['name']} has been enlarged to {target_size}."
+                                elif completed_order == "Under Construction":
+                                    log_message = f"{owner['name']}'s new {facility['name']} has been completed."
+                                else:
+                                    log_message = f"{owner['name']}'s {facility['name']} has completed the order: {completed_order}."
+                                
+                                supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
+                                add_log_entry(day_in_progress, log_message)
+                                # Update session state directly
+                                st.session_state.data['bastions'][bastion_index]['facilities'][fac_index].update(update_payload)
                             else:
-                                log_message = f"{owner['name']}'s {facility['name']} has completed the order: {completed_order}."
-                            
-                            add_log_entry(day_in_progress, log_message)
-                            
-                            facility['status'] = 'Idle' 
-                            
-                            supabase.table("facilities").update(update_payload).eq("id", facility['id']).execute()
-
-                        else:
-                            facility['order_progress'] = new_progress
-                            daily_updates.append({"id": facility['id'], "order_progress": new_progress})
-                    
-                    for update in daily_updates:
-                         supabase.table("facilities").update({"order_progress": update["order_progress"]}).eq("id", update["id"]).execute()
-
-                # Finally, update the campaign's day
+                                supabase.table("facilities").update({"order_progress": new_progress}).eq("id", facility['id']).execute()
+                                # Update session state directly
+                                st.session_state.data['bastions'][bastion_index]['facilities'][fac_index]['order_progress'] = new_progress
+                
                 new_day = current_day + days_to_advance
                 supabase.table("campaigns").update({"current_day": new_day}).eq("id", campaign['id']).execute()
+                # Update session state for the day counter
+                st.session_state.data['campaign']['current_day'] = new_day
             
             st.success(f"Time advanced by {days_to_advance} days. New day is {new_day}.")
-            
             time.sleep(1) 
-            refresh_data()
+            # Clear cache to ensure the *next* full page load is fresh, but rerun immediately with updated session state
+            st.cache_data.clear()
+            st.rerun()
 
 # --- MAIN APP ROUTER ---
 def main():
     """Main function to run the Streamlit app."""
-    if 'data' not in st.session_state:
-        st.session_state.data = None
-    
-    # Load data only if it's not already in the session state.
-    # The `refresh_data` function will handle clearing this when needed.
-    if st.session_state.data is None:
+    if 'data' not in st.session_state or st.session_state.data is None:
         with st.spinner("Summoning Mortimer from the archives..."):
             st.session_state.data = load_data()
 
@@ -605,7 +561,12 @@ def main():
             current_index = 0 
 
         selected_player = st.sidebar.selectbox("Select Your Character:", options=player_list, index=current_index)
-        st.session_state.current_player = selected_player
+        if st.session_state.current_player != selected_player:
+            st.session_state.current_player = selected_player
+            # Clear modals if player switches
+            if 'selected_facility_order' in st.session_state: del st.session_state.selected_facility_order
+            if 'selected_facility_upgrade' in st.session_state: del st.session_state.selected_facility_upgrade
+            st.rerun()
 
         if selected_player == "DM":
             view = "DM View"
